@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UniCore — College Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--surface3:#212d42;
+    --border:#2a3a55;--accent:#4f8ef7;--accent2:#7c3aed;--accent3:#10b981;
+    --accent4:#f59e0b;--accent5:#ef4444;--text:#e8edf5;--text2:#8a9bbf;--text3:#5a6d8a;
+    --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+    --sidebar-w:260px;--header-h:64px;--radius:14px;--shadow:0 4px 24px rgba(0,0,0,.4);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;display:flex;overflow-x:hidden}
+  .sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+  .sidebar-logo{padding:28px 24px 20px;border-bottom:1px solid var(--border)}
+  .logo-mark{font-family:var(--font-head);font-size:22px;font-weight:800;letter-spacing:-.5px}
+  .logo-mark span{color:var(--accent)}
+  .logo-sub{font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;font-weight:500}
+  .sidebar-nav{flex:1;padding:20px 14px;overflow-y:auto}
+  .nav-group-label{font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:var(--text3);font-weight:600;padding:0 10px;margin:18px 0 8px}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .18s;margin-bottom:2px;border:1px solid transparent}
+  .nav-item:hover{background:var(--surface2);color:var(--text)}
+  .nav-item.active{background:linear-gradient(135deg,rgba(79,142,247,.15),rgba(124,58,237,.1));color:var(--accent);border-color:rgba(79,142,247,.25)}
+  .nav-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--surface2);flex-shrink:0;transition:all .18s}
+  .nav-item.active .nav-icon{background:rgba(79,142,247,.2)}
+  .sidebar-footer{padding:16px 14px;border-top:1px solid var(--border)}
+  .user-card{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;background:var(--surface2)}
+  .user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+  .user-name{font-size:13px;font-weight:600}.user-role{font-size:11px;color:var(--text3)}
+  .main-wrap{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+  .header{height:var(--header-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:90}
+  .breadcrumb{font-family:var(--font-head);font-size:18px;font-weight:700}
+  .header-right{display:flex;align-items:center;gap:14px}
+  .header-badge{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 14px;font-size:13px;color:var(--text2);font-weight:500}
+  .notif-btn{width:38px;height:38px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;position:relative}
+  .notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--accent5);border-radius:50%;border:2px solid var(--surface)}
+  .content{flex:1;padding:32px;overflow-y:auto}
+  .section{display:none;animation:fadeIn .3s ease}.section.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:32px}
+  .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 24px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+  .stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+  .stat-card.blue::before{background:linear-gradient(90deg,var(--accent),#63b3ed)}
+  .stat-card.purple::before{background:linear-gradient(90deg,var(--accent2),#a78bfa)}
+  .stat-card.green::before{background:linear-gradient(90deg,var(--accent3),#6ee7b7)}
+  .stat-card.amber::before{background:linear-gradient(90deg,var(--accent4),#fcd34d)}
+  .stat-label{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);font-weight:600;margin-bottom:10px}
+  .stat-value{font-family:var(--font-head);font-size:36px;font-weight:800;line-height:1;margin-bottom:6px}
+  .stat-card.blue .stat-value{color:var(--accent)}.stat-card.purple .stat-value{color:#a78bfa}
+  .stat-card.green .stat-value{color:var(--accent3)}.stat-card.amber .stat-value{color:var(--accent4)}
+  .stat-change{font-size:12px;color:var(--text3)}.stat-icon{position:absolute;bottom:14px;right:18px;font-size:40px;opacity:.07}
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .section-title{font-family:var(--font-head);font-size:20px;font-weight:700}
+  .section-subtitle{font-size:13px;color:var(--text3);margin-top:2px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:9px;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s}
+  .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#3a7de8;transform:translateY(-1px)}
+  .btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{background:var(--surface3);color:var(--text)}
+  .table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+  .table-toolbar{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .search-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px 8px 36px;font-family:var(--font-body);font-size:13px;color:var(--text);width:220px;outline:none;transition:border-color .18s}
+  .search-input:focus{border-color:var(--accent)}.search-input::placeholder{color:var(--text3)}
+  .search-wrap{position:relative;display:inline-block}
+  .search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:var(--surface2);padding:12px 18px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:700;border-bottom:1px solid var(--border)}
+  tbody tr{border-bottom:1px solid rgba(42,58,85,.5);transition:background .15s}
+  tbody tr:hover{background:rgba(79,142,247,.04)}tbody tr:last-child{border-bottom:none}
+  tbody td{padding:13px 18px;font-size:13px;color:var(--text2);vertical-align:middle}
+  .cell-primary{color:var(--text)!important;font-weight:600}
+  .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.5px}
+  .badge-blue{background:rgba(79,142,247,.15);color:var(--accent)}
+  .badge-purple{background:rgba(124,58,237,.15);color:#a78bfa}
+  .badge-green{background:rgba(16,185,129,.15);color:var(--accent3)}
+  .badge-amber{background:rgba(245,158,11,.15);color:var(--accent4)}
+  .badge-red{background:rgba(239,68,68,.15);color:var(--accent5)}
+  .gpa-bar-wrap{display:flex;align-items:center;gap:8px}
+  .gpa-bar{height:5px;border-radius:3px;background:var(--surface3);width:60px;overflow:hidden}
+  .gpa-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .pagination{display:flex;align-items:center;gap:8px;padding:14px 20px;border-top:1px solid var(--border);justify-content:space-between}
+  .page-info{font-size:13px;color:var(--text3)}
+  .page-btns{display:flex;gap:6px}
+  .page-btn{width:32px;height:32px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+  .page-btn:hover,.page-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .page-btn:disabled{opacity:.3;cursor:not-allowed}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px;width:480px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:slideUp .25s ease}
+  @keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .modal-title{font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
+  .modal-close{cursor:pointer;color:var(--text3);font-size:20px;line-height:1;transition:color .15s}.modal-close:hover{color:var(--text)}
+  .form-group{margin-bottom:16px}
+  .form-label{display:block;font-size:12px;font-weight:600;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+  .form-input,.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 14px;font-family:var(--font-body);font-size:14px;color:var(--text);outline:none;transition:border-color .18s;appearance:none}
+  .form-input:focus,.form-select:focus{border-color:var(--accent)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+  .welcome-banner{background:linear-gradient(135deg,rgba(79,142,247,.15) 0%,rgba(124,58,237,.1) 50%,rgba(16,185,129,.08) 100%);border:1px solid rgba(79,142,247,.2);border-radius:var(--radius);padding:28px 32px;margin-bottom:28px;position:relative;overflow:hidden}
+  .welcome-banner::after{content:'🎓';position:absolute;right:30px;top:50%;transform:translateY(-50%);font-size:72px;opacity:.15}
+  .welcome-title{font-family:var(--font-head);font-size:26px;font-weight:800;margin-bottom:6px}
+  .welcome-sub{color:var(--text2);font-size:14px}.welcome-title span{color:var(--accent)}
+  .schedule-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .schedule-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;transition:all .2s;position:relative;overflow:hidden}
+  .schedule-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--accent)}
+  .schedule-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px}
+  .schedule-card:nth-child(1)::before{background:var(--accent)}.schedule-card:nth-child(2)::before{background:var(--accent2)}.schedule-card:nth-child(3)::before{background:var(--accent3)}
+  .sched-day{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .sched-course{font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:6px}
+  .sched-doctor{font-size:13px;color:var(--text2);margin-bottom:14px}
+  .sched-meta{display:flex;gap:10px}
+  .sched-chip{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text3);display:flex;align-items:center;gap:5px}
+  ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+  select option{background:var(--surface2);color:var(--text)}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">Uni<span>Core</span></div>
+    <div class="logo-sub">Management System</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" data-section="dashboard"><div class="nav-icon">🏠</div>Dashboard</div>
+    <div class="nav-group-label">Academic</div>
+    <div class="nav-item" data-section="students"><div class="nav-icon">🎓</div>Students</div>
+    <div class="nav-item" data-section="departments"><div class="nav-icon">🏛️</div>Departments</div>
+    <div class="nav-item" data-section="courses"><div class="nav-icon">📚</div>Courses</div>
+    <div class="nav-item" data-section="doctors"><div class="nav-icon">👨‍🏫</div>Faculty</div>
+    <div class="nav-group-label">Management</div>
+    <div class="nav-item" data-section="enrollments"><div class="nav-icon">📋</div>Enrollments</div>
+    <div class="nav-item" data-section="schedule"><div class="nav-icon">📅</div>Schedule</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">AD</div>
+      <div><div class="user-name">Admin</div><div class="user-role">System Administrator</div></div>
+    </div>
+  </div>
+</aside>
+
+<div class="main-wrap">
+  <header class="header">
+    <div class="breadcrumb" id="breadcrumb">Dashboard</div>
+    <div class="header-right">
+      <div class="header-badge">📅 Spring 2025</div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <main class="content">
+
+    <!-- DASHBOARD -->
+    <section class="section active" id="dashboard">
+      <div class="welcome-banner">
+        <div class="welcome-title">Welcome back, <span>Admin</span> 👋</div>
+        <div class="welcome-sub">200 students across 4 departments — Spring 2025</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-label">Total Students</div><div class="stat-value">200</div><div class="stat-change">4 years · All departments</div><div class="stat-icon">🎓</div></div>
+        <div class="stat-card purple"><div class="stat-label">Departments</div><div class="stat-value">4</div><div class="stat-change">DS · CS · IS · SIM</div><div class="stat-icon">🏛️</div></div>
+        <div class="stat-card green"><div class="stat-label">Active Courses</div><div class="stat-value">15</div><div class="stat-change">43 total credit hours</div><div class="stat-icon">📚</div></div>
+        <div class="stat-card amber"><div class="stat-label">Avg GPA</div><div class="stat-value">2.55</div><div class="stat-change">Across all students</div><div class="stat-icon">📊</div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-label">IS — Info Systems</div><div class="stat-value">56</div><div class="stat-change">28% of total</div><div class="stat-icon">💼</div></div>
+        <div class="stat-card purple"><div class="stat-label">CS — Comp Science</div><div class="stat-value">43</div><div class="stat-change">21.5% of total</div><div class="stat-icon">💻</div></div>
+        <div class="stat-card green"><div class="stat-label">SIM — Smart Intel</div><div class="stat-value">51</div><div class="stat-change">25.5% of total</div><div class="stat-icon">🤖</div></div>
+        <div class="stat-card amber"><div class="stat-label">DS — Data Science</div><div class="stat-value">50</div><div class="stat-change">25% of total</div><div class="stat-icon">📈</div></div>
+      </div>
+      <div class="section-header"><div><div class="section-title">Top Students by GPA</div><div class="section-subtitle">Highest performing students this semester</div></div></div>
+      <div class="table-card">
+        <table id="topTable">
+          <thead><tr><th>Rank</th><th>ID</th><th>Name</th><th>Department</th><th>Year</th><th>GPA</th></tr></thead>
+          <tbody id="topBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section class="section" id="students">
+      <div class="section-header">
+        <div><div class="section-title">Student Registry</div><div class="section-subtitle" id="studCount">All 200 students</div></div>
+        <button class="btn btn-primary" onclick="openModal('addStudent')">＋ Add Student</button>
+      </div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <div class="search-wrap"><input class="search-input" placeholder="Search name or ID..." id="studSearch" oninput="applyFilters()"></div>
+          <select class="form-select" style="width:120px;padding:8px 12px;" id="deptFilter" onchange="applyFilters()">
+            <option value="">All Depts</option><option>DS</option><option>CS</option><option>IS</option><option>SIM</option>
+          </select>
+          <select class="form-select" style="width:120px;padding:8px 12px;" id="yearFilter" onchange="applyFilters()">
+            <option value="">All Years</option><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option>
+          </select>
+          <select class="form-select" style="width:130px;padding:8px 12px;" id="genderFilter" onchange="applyFilters()">
+            <option value="">All Genders</option><option>Male</option><option>Female</option>
+          </select>
+        </div>
+        <table><thead><tr><th>ID</th><th>Name</th><th>Gender</th><th>Year</th><th>Department</th><th>GPA</th><th>Courses</th><th>Email</th></tr></thead>
+        <tbody id="studBody"></tbody></table>
+        <div class="pagination">
+          <div class="page-info" id="pageInfo"></div>
+          <div class="page-btns">
+            <button class="page-btn" id="prevBtn" onclick="changePage(-1)">‹</button>
+            <div id="pageBtns"></div>
+            <button class="page-btn" id="nextBtn" onclick="changePage(1)">›</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEPARTMENTS -->
+    <section class="section" id="departments">
+      <div class="section-header"><div><div class="section-title">Departments</div><div class="section-subtitle">4 academic departments</div></div></div>
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-label">Dept ID: 1</div><div class="stat-value" style="font-size:24px">DS</div><div class="stat-change">Data Science — 50 students</div><div class="stat-icon">📊</div></div>
+        <div class="stat-card purple"><div class="stat-label">Dept ID: 2</div><div class="stat-value" style="font-size:24px">CS</div><div class="stat-change">Computer Science — 43 students</div><div class="stat-icon">💻</div></div>
+        <div class="stat-card green"><div class="stat-label">Dept ID: 3</div><div class="stat-value" style="font-size:24px">IS</div><div class="stat-change">Information Systems — 56 students</div><div class="stat-icon">💼</div></div>
+        <div class="stat-card amber"><div class="stat-label">Dept ID: 4</div><div class="stat-value" style="font-size:24px">SIM</div><div class="stat-change">Smart Intelligent — 51 students</div><div class="stat-icon">🤖</div></div>
+      </div>
+      <div class="table-card">
+        <table><thead><tr><th>Dept ID</th><th>Department Name</th><th>Students</th><th>Courses</th><th>Avg GPA</th></tr></thead>
+        <tbody id="deptBody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- COURSES -->
+    <section class="section" id="courses">
+      <div class="section-header"><div><div class="section-title">Course Catalog</div><div class="section-subtitle">15 courses across 4 departments</div></div></div>
+      <div class="table-card">
+        <table><thead><tr><th>Course ID</th><th>Course Name</th><th>Credit Hours</th><th>Department</th><th>Doctor</th></tr></thead>
+        <tbody>
+          <tr><td class="cell-primary">20</td><td>Database Systems</td><td>3</td><td><span class="badge badge-purple">CS</span></td><td>Dr. Ahmed Mostafa</td></tr>
+          <tr><td class="cell-primary">21</td><td>Data Structures</td><td>3</td><td><span class="badge badge-purple">CS</span></td><td>Dr. Marawan Eltorky</td></tr>
+          <tr><td class="cell-primary">22</td><td>Operating Systems</td><td>3</td><td><span class="badge badge-purple">CS</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">23</td><td>Computer Networks</td><td>3</td><td><span class="badge badge-purple">CS</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">24</td><td>Machine Learning</td><td>3</td><td><span class="badge badge-blue">DS</span></td><td>Dr. Amr Amin</td></tr>
+          <tr><td class="cell-primary">25</td><td>Deep Learning</td><td>3</td><td><span class="badge badge-blue">DS</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">26</td><td>Data Mining</td><td>3</td><td><span class="badge badge-blue">DS</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">27</td><td>Big Data Analytics</td><td>3</td><td><span class="badge badge-blue">DS</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">28</td><td>Business Intelligence</td><td>2</td><td><span class="badge badge-green">IS</span></td><td>Dr. Ahmed Taras</td></tr>
+          <tr><td class="cell-primary">29</td><td>Project Management</td><td>2</td><td><span class="badge badge-green">IS</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">30</td><td>E-Commerce Systems</td><td>3</td><td><span class="badge badge-green">IS</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">31</td><td>Smart Systems</td><td>3</td><td><span class="badge badge-amber">SIM</span></td><td>Dr. Ahmed Saleh</td></tr>
+          <tr><td class="cell-primary">32</td><td>Embedded Systems</td><td>3</td><td><span class="badge badge-amber">SIM</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">33</td><td>Internet of Things</td><td>3</td><td><span class="badge badge-amber">SIM</span></td><td>—</td></tr>
+          <tr><td class="cell-primary">34</td><td>Artificial Intelligence</td><td>3</td><td><span class="badge badge-blue">DS</span></td><td>—</td></tr>
+        </tbody></table>
+      </div>
+    </section>
+
+    <!-- DOCTORS -->
+    <section class="section" id="doctors">
+      <div class="section-header"><div><div class="section-title">Faculty Members</div><div class="section-subtitle">10 academic staff</div></div></div>
+      <div class="table-card">
+        <table><thead><tr><th>Doctor ID</th><th>Name</th><th>Hours/Week</th><th>Assigned Course</th><th>Load</th></tr></thead>
+        <tbody>
+          <tr><td class="cell-primary">1</td><td>Dr. Ahmed Mostafa</td><td>18</td><td>Database Systems</td><td><span class="badge badge-amber">Heavy</span></td></tr>
+          <tr><td class="cell-primary">2</td><td>Dr. Marawan Eltorky</td><td>15</td><td>Data Structures</td><td><span class="badge badge-amber">Heavy</span></td></tr>
+          <tr><td class="cell-primary">3</td><td>Dr. Amr Amin</td><td>20</td><td>Machine Learning</td><td><span class="badge badge-red">Overload</span></td></tr>
+          <tr><td class="cell-primary">4</td><td>Dr. Ahmed Saleh</td><td>12</td><td>Smart Systems</td><td><span class="badge badge-blue">Normal</span></td></tr>
+          <tr><td class="cell-primary">5</td><td>Dr. Ahmed Taras</td><td>10</td><td>Business Intelligence</td><td><span class="badge badge-blue">Normal</span></td></tr>
+          <tr><td class="cell-primary">6</td><td>Dr. Nesreen Nabil</td><td>9</td><td>—</td><td><span class="badge badge-green">Light</span></td></tr>
+          <tr><td class="cell-primary">7</td><td>Dr. Shaimaa Yehia</td><td>6</td><td>—</td><td><span class="badge badge-green">Light</span></td></tr>
+          <tr><td class="cell-primary">8</td><td>Dr. Saleh Mesbah</td><td>6</td><td>—</td><td><span class="badge badge-green">Light</span></td></tr>
+          <tr><td class="cell-primary">9</td><td>Dr. Mohamed Abasy</td><td>12</td><td>—</td><td><span class="badge badge-blue">Normal</span></td></tr>
+          <tr><td class="cell-primary">10</td><td>Dr. Nancy Diaa</td><td>16</td><td>—</td><td><span class="badge badge-amber">Heavy</span></td></tr>
+        </tbody></table>
+      </div>
+    </section>
+
+    <!-- ENROLLMENTS -->
+    <section class="section" id="enrollments">
+      <div class="section-header"><div><div class="section-title">Enrollment Records</div><div class="section-subtitle">Student course registrations</div></div></div>
+      <div class="table-card">
+        <table><thead><tr><th>Enrollment ID</th><th>Student ID</th><th>Student Name</th><th>Course</th><th>Enroll Date</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td class="cell-primary">#001</td><td>23015</td><td>Nour Waleed Hussien</td><td>Database Systems (ID: 20)</td><td>Jan 15, 2025</td><td><span class="badge badge-green">Enrolled</span></td></tr>
+          <tr><td class="cell-primary">#002</td><td>23025</td><td>Mena Ahmed Youssry</td><td>Data Structures (ID: 21)</td><td>Jan 15, 2025</td><td><span class="badge badge-green">Enrolled</span></td></tr>
+          <tr><td class="cell-primary">#003</td><td>24050</td><td>Salma Khaled Ibrahim</td><td>Machine Learning (ID: 24)</td><td>Jan 16, 2025</td><td><span class="badge badge-amber">Pending</span></td></tr>
+        </tbody></table>
+      </div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section class="section" id="schedule">
+      <div class="section-header"><div><div class="section-title">Lecture Schedule</div><div class="section-subtitle">Weekly timetable</div></div></div>
+      <div class="schedule-grid">
+        <div class="schedule-card"><div class="sched-day">☀️ Sunday</div><div class="sched-course">Database Systems</div><div class="sched-doctor">Dr. Ahmed Mostafa</div><div class="sched-meta"><div class="sched-chip">🕙 10:00 AM</div><div class="sched-chip">🚪 Room A1</div></div></div>
+        <div class="schedule-card"><div class="sched-day" style="color:var(--accent2)">🌙 Monday</div><div class="sched-course">Data Structures</div><div class="sched-doctor">Dr. Marawan Eltorky</div><div class="sched-meta"><div class="sched-chip">🕛 12:00 PM</div><div class="sched-chip">🚪 Room B2</div></div></div>
+        <div class="schedule-card"><div class="sched-day" style="color:var(--accent3)">🔬 Tuesday</div><div class="sched-course">Machine Learning</div><div class="sched-doctor">Dr. Amr Amin</div><div class="sched-meta"><div class="sched-chip">🕑 2:00 PM</div><div class="sched-chip">🚪 Room C3</div></div></div>
+      </div>
+      <div style="margin-top:28px">
+        <div class="section-header"><div class="section-title">Full Schedule Table</div></div>
+        <div class="table-card"><table><thead><tr><th>Schedule ID</th><th>Course</th><th>Doctor</th><th>Day</th><th>Time</th><th>Room</th></tr></thead>
+        <tbody>
+          <tr><td class="cell-primary">SCH-001</td><td>Database Systems</td><td>Dr. Ahmed Mostafa</td><td><span class="badge badge-blue">Sunday</span></td><td>10:00 AM</td><td>A1</td></tr>
+          <tr><td class="cell-primary">SCH-002</td><td>Data Structures</td><td>Dr. Marawan Eltorky</td><td><span class="badge badge-purple">Monday</span></td><td>12:00 PM</td><td>B2</td></tr>
+          <tr><td class="cell-primary">SCH-003</td><td>Machine Learning</td><td>Dr. Amr Amin</td><td><span class="badge badge-green">Tuesday</span></td><td>2:00 PM</td><td>C3</td></tr>
+        </tbody></table></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="addStudent">
+  <div class="modal">
+    <div class="modal-title">Add New Student <span class="modal-close" onclick="closeModal('addStudent')">✕</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Student ID</label><input class="form-input" type="number" id="newId" placeholder="e.g. 25041"></div>
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" type="text" id="newName" placeholder="Full name"></div>
+      <div class="form-group"><label class="form-label">Gender</label><select class="form-select" id="newGender"><option>Male</option><option>Female</option></select></div>
+      <div class="form-group"><label class="form-label">Year</label><select class="form-select" id="newYear"><option>1st</option><option>2nd</option><option>3rd</option><option>4th</option></select></div>
+      <div class="form-group"><label class="form-label">Department</label><select class="form-select" id="newDept"><option>DS</option><option>CS</option><option>IS</option><option>SIM</option></select></div>
+      <div class="form-group"><label class="form-label">GPA</label><input class="form-input" type="number" step="0.01" min="0" max="4" id="newGpa" placeholder="0.00–4.00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" id="newEmail" placeholder="id@anu.edu"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addStudent')">Cancel</button>
+      <button class="btn btn-primary" onclick="addStudent()">Save Student</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;bottom:28px;right:28px;background:var(--accent3);color:#fff;padding:12px 22px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;box-shadow:0 6px 24px rgba(16,185,129,.4)">✓ Success</div>
+
+<script>
+const STUDENTS = [{"id": "25001", "name": "Mirna Mohmed Ali", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 3.33, "courses": "6", "email": "25001@anu.edu"}, {"id": "25002", "name": "Saged Ahmed Ali", "gender": "Male", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 3.8, "courses": "6", "email": "25002@anu.edu"}, {"id": "25003", "name": "Mariam Ahmed Youssef", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 2.8, "courses": "6", "email": "25003@anu.edu"}, {"id": "25004", "name": "Hend Ahmed Ali", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 1.77, "courses": "4", "email": "25004@anu.edu"}, {"id": "25005", "name": "Nejar Samy Mohmed", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 2.8, "courses": "6", "email": "25005@anu.edu"}, {"id": "25006", "name": "Ahmed Abas Ahmed", "gender": "Male", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 3.4, "courses": "6", "email": "25006@anu.edu"}, {"id": "25007", "name": "Jana Mohmed Hussien", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 2.9, "courses": "6", "email": "25007@anu.edu"}, {"id": "25008", "name": "Yara Mohmed Abdelnasser", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 3.5, "courses": "6", "email": "25008@anu.edu"}, {"id": "25009", "name": "Habiba Dahy Mohmed", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 2.8, "courses": "6", "email": "25009@anu.edu"}, {"id": "25010", "name": "Ahmed Ali Taher", "gender": "Male", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 3.2, "courses": "6", "email": "25010@anu.edu"}, {"id": "25011", "name": "Nour El Hossieny Badry", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 2.0, "courses": "6", "email": "25011@anu.edu"}, {"id": "25012", "name": "Zaid Khaled Ahmed", "gender": "Male", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 1.8, "courses": "4", "email": "25012@anu.edu"}, {"id": "25013", "name": "Mohmed Yasser Ali", "gender": "Male", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 3.33, "courses": "6", "email": "25013@anu.edu"}, {"id": "25014", "name": "Mohmed Kamal Ali", "gender": "Male", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 2.77, "courses": "6", "email": "25014@anu.edu"}, {"id": "25015", "name": "Jana Mohmed El Sahat", "gender": "Female", "year": "1st", "dep": "DS", "dep_id": "1", "gpa": 2.4, "courses": "6", "email": "25015@anu.edu"}, {"id": "25016", "name": "Ahmed Amr Mohmed", "gender": "Male", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 3.6, "courses": "6", "email": "25016@anu.edu"}, {"id": "25017", "name": "Fatema Mohmed Elsayed", "gender": "Female", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 3.44, "courses": "6", "email": "25017@anu.edu"}, {"id": "25018", "name": "Nourhan Saber Ahmed", "gender": "Female", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 3.72, "courses": "6", "email": "25018@anu.edu"}, {"id": "25019", "name": "Lina Yasser Mahmoud", "gender": "Female", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 2.5, "courses": "6", "email": "25019@anu.edu"}, {"id": "25020", "name": "Yousra Yasser Mahmoud", "gender": "Female", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 3.8, "courses": "6", "email": "25020@anu.edu"}, {"id": "25021", "name": "Omar Ahmed Elshimy", "gender": "Male", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 3.6, "courses": "6", "email": "25021@anu.edu"}, {"id": "25022", "name": "Omar Ali Tahtawy", "gender": "Male", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 1.88, "courses": "4", "email": "25022@anu.edu"}, {"id": "25023", "name": "Ahmed Youssef Mohmed", "gender": "Male", "year": "1st", "dep": "CS", "dep_id": "2", "gpa": 3.5, "courses": "6", "email": "25023@anu.edu"}, {"id": "25024", "name": "Ahmed Mohmed Momtaz", "gender": "Male", "year": "1st", "dep": "IS", "dep_id": "3", "gpa": 2.5, "courses": "6", "email": "25024@anu.edu"}, {"id": "25025", "name": "Karma Mohmed Ali", "gender": "Female", "year": "1st", "dep": "IS", "dep_id": "3", "gpa": 2.2, "courses": "6", "email": "25025@anu.edu"}, {"id": "25026", "name": "Farida Ayman Ahmed", "gender": "Female", "year": "1st", "dep": "IS", "dep_id": "3", "gpa": 2.1, "courses": "6", "email": "25026@anu.edu"}, {"id": "25027", "name": "Adham Neim Hazam", "gender": "Male", "year": "1st", "dep": "IS", "dep_id": "3", "gpa": 2.0, "courses": "6", "email": "25027@anu.edu"}, {"id": "25028", "name": "Ali Ahmed Wael", "gender": "Male", "year": "1st", "dep": "IS", "dep_id": "3", "gpa": 3.44, "courses": "6", "email": "25028@anu.edu"}, {"id": "25029", "name": "Marwan Ahmed Mahmoud", "gender": "Male", "year": "1st", "dep": "IS", "dep_id": "3", "gpa": 3.68, "courses": "6", "email": "25029@anu.edu"}, {"id": "25030", "name": "Jana Mohmed Ali", "gender": "Female", "year": "1st", "dep": "IS", "dep_id": "3", "gpa": 3.66, "courses": "6", "email": "25030@anu.edu"}, {"id": "25031", "name": "Farah Mortada Yasser", "gender": "Female", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 3.7, "courses": "6", "email": "25031@anu.edu"}, {"id": "25032", "name": "Mohmed Sherif Mahmoud", "gender": "Male", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 3.89, "courses": "6", "email": "25032@anu.edu"}, {"id": "25033", "name": "Mohnnad Yasser Ahmed", "gender": "Male", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 2.9, "courses": "6", "email": "25033@anu.edu"}, {"id": "25034", "name": "Laila Ali Samy", "gender": "Female", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 3.1, "courses": "6", "email": "25034@anu.edu"}, {"id": "25035", "name": "Nada Ahmed Shaban", "gender": "Female", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 1.8, "courses": "4", "email": "25035@anu.edu"}, {"id": "25036", "name": "Amira Mohmed Salam", "gender": "Female", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 1.5, "courses": "4", "email": "25036@anu.edu"}, {"id": "25037", "name": "Dalia Salaheldin Noureldin", "gender": "Female", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 2.4, "courses": "6", "email": "25037@anu.edu"}, {"id": "25038", "name": "Omar Ahmed Farouk", "gender": "Male", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 2.8, "courses": "6", "email": "25038@anu.edu"}, {"id": "25039", "name": "Adham Hesham Ahmed", "gender": "Male", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 1.6, "courses": "4", "email": "25039@anu.edu"}, {"id": "25040", "name": "Nadine Ahmed Radwan", "gender": "Female", "year": "1st", "dep": "SIM", "dep_id": "4", "gpa": 1.99, "courses": "4", "email": "25040@anu.edu"}, {"id": "24001", "name": "Farida Khaled Abdalah", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 2.9, "courses": "6", "email": "24001@anu.edu"}, {"id": "24002", "name": "Nancy Ehab Maher", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 3.1, "courses": "6", "email": "24002@anu.edu"}, {"id": "24003", "name": "Marsel Hakim Shoukry", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 3.3, "courses": "6", "email": "24003@anu.edu"}, {"id": "24004", "name": "Malak Khaled Mohmed", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 3.2, "courses": "6", "email": "24004@anu.edu"}, {"id": "24005", "name": "Ziena Elsayed Ibrahim", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 3.6, "courses": "6", "email": "24005@anu.edu"}, {"id": "24006", "name": "Mohmed Ahmed Hawary", "gender": "Male", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 2.1, "courses": "6", "email": "24006@anu.edu"}, {"id": "24007", "name": "Omar Sameh Karim", "gender": "Male", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 1.5, "courses": "4", "email": "24007@anu.edu"}, {"id": "24008", "name": "Hana Mohmed Ahmed", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 1.7, "courses": "4", "email": "24008@anu.edu"}, {"id": "24009", "name": "Salma Diaaldin Ali", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 1.6, "courses": "4", "email": "24009@anu.edu"}, {"id": "24010", "name": "Nourelhooda Ahmed Ali", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 1.8, "courses": "4", "email": "24010@anu.edu"}, {"id": "24011", "name": "Yosra Fayed Ahmed", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 1.97, "courses": "4", "email": "24011@anu.edu"}, {"id": "24012", "name": "Laila Morad Karim", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 3.4, "courses": "6", "email": "24012@anu.edu"}, {"id": "24013", "name": "Malak Tawfik Mohmed", "gender": "Female", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 2.9, "courses": "6", "email": "24013@anu.edu"}, {"id": "24014", "name": "Abdelrahman Salam Ali", "gender": "Male", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 2.7, "courses": "6", "email": "24014@anu.edu"}, {"id": "24015", "name": "Karim Mohmed Rodhdy", "gender": "Male", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 1.88, "courses": "4", "email": "24015@anu.edu"}, {"id": "24016", "name": "Mohmed Fawzy Ali", "gender": "Male", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 2.6, "courses": "6", "email": "24016@anu.edu"}, {"id": "24017", "name": "Kelvine Peter Yousry", "gender": "Male", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 3.31, "courses": "6", "email": "24017@anu.edu"}, {"id": "24018", "name": "Hany Kamel Youssef", "gender": "Male", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 1.18, "courses": "4", "email": "24018@anu.edu"}, {"id": "24019", "name": "Youssef Mohmed Salah", "gender": "Male", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 2.7, "courses": "6", "email": "24019@anu.edu"}, {"id": "24020", "name": "Hager Ahmed Ali", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 1.77, "courses": "4", "email": "24020@anu.edu"}, {"id": "24021", "name": "Nadine Khaled Mohmed", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 2.8, "courses": "6", "email": "24021@anu.edu"}, {"id": "24022", "name": "Fares Eslam Youssef", "gender": "Male", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 1.2, "courses": "4", "email": "24022@anu.edu"}, {"id": "24023", "name": "Youssef Ahmed Mostfa", "gender": "Male", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 1.9, "courses": "4", "email": "24023@anu.edu"}, {"id": "24024", "name": "Hagger Saad Ahmed", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 2.4, "courses": "6", "email": "24024@anu.edu"}, {"id": "24025", "name": "Mariam Mohmed Ahmed", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 3.2, "courses": "6", "email": "24025@anu.edu"}, {"id": "24026", "name": "Hana Walid Abdelwahad", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 3.33, "courses": "6", "email": "24026@anu.edu"}, {"id": "24027", "name": "Yasmin Elabid Karam", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 1.7, "courses": "4", "email": "24027@anu.edu"}, {"id": "24028", "name": "Jana Abdullah Ali", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 2.8, "courses": "6", "email": "24028@anu.edu"}, {"id": "24029", "name": "Malak Mohmed Mounir", "gender": "Female", "year": "2nd", "dep": "DS", "dep_id": "1", "gpa": 1.5, "courses": "4", "email": "24029@anu.edu"}, {"id": "24030", "name": "Mahmoud Hazem Ali", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 2.3, "courses": "6", "email": "24030@anu.edu"}, {"id": "24031", "name": "Youssef Ahmed Ali", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 1.6, "courses": "4", "email": "24031@anu.edu"}, {"id": "24032", "name": "Mohmed Ahmed Abdullah", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 2.4, "courses": "6", "email": "24032@anu.edu"}, {"id": "24033", "name": "Omar Hatem Helal", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 1.4, "courses": "4", "email": "24033@anu.edu"}, {"id": "24034", "name": "Omar Saad Ali", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 3.7, "courses": "6", "email": "24034@anu.edu"}, {"id": "24035", "name": "Kirellos John Gendy", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 1.5, "courses": "4", "email": "24035@anu.edu"}, {"id": "24036", "name": "Yara Haitham Karim", "gender": "Female", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 3.7, "courses": "6", "email": "24036@anu.edu"}, {"id": "24037", "name": "Kemel Yasser Kemel", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 3.5, "courses": "6", "email": "24037@anu.edu"}, {"id": "24038", "name": "Marwan Ahmed Youssef", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 1.8, "courses": "4", "email": "24038@anu.edu"}, {"id": "24039", "name": "Adam Mohmed Alaa", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 2.4, "courses": "6", "email": "24039@anu.edu"}, {"id": "24040", "name": "Nahla Mohmed Ayman", "gender": "Female", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 1.89, "courses": "4", "email": "24040@anu.edu"}, {"id": "24041", "name": "Adam Alaa Eldin Mohram", "gender": "Male", "year": "2nd", "dep": "IS", "dep_id": "3", "gpa": 1.8, "courses": "4", "email": "24041@anu.edu"}, {"id": "24042", "name": "Hana Ahmed Basyouni", "gender": "Female", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 1.6, "courses": "4", "email": "24042@anu.edu"}, {"id": "24043", "name": "Zeyad Mohmed Ahmed", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 2.5, "courses": "6", "email": "24043@anu.edu"}, {"id": "24044", "name": "Omar Waleed Ahmed", "gender": "Male", "year": "2nd", "dep": "CS", "dep_id": "2", "gpa": 2.8, "courses": "6", "email": "24044@anu.edu"}, {"id": "24045", "name": "Adel Hesham Saber", "gender": "Male", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 3.1, "courses": "6", "email": "24045@anu.edu"}, {"id": "24046", "name": "Lareen Salah Ahmed", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 1.19, "courses": "4", "email": "24046@anu.edu"}, {"id": "24047", "name": "Youssef Diaa Elfeky", "gender": "Male", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 1.2, "courses": "4", "email": "24047@anu.edu"}, {"id": "24048", "name": "Jana Nasser Eldin", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 2.2, "courses": "6", "email": "24048@anu.edu"}, {"id": "24049", "name": "Ali Ahmed Mohmed", "gender": "Male", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 1.6, "courses": "4", "email": "24049@anu.edu"}, {"id": "24050", "name": "Salma Khaled Ibrahim", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 1.5, "courses": "4", "email": "24050@anu.edu"}, {"id": "24051", "name": "Mariam Ashraf Harb", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 3.4, "courses": "6", "email": "24051@anu.edu"}, {"id": "24052", "name": "Mariam Ashraf Metwally", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 2.3, "courses": "6", "email": "24052@anu.edu"}, {"id": "24053", "name": "Salma Ragab Farid", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 3.2, "courses": "6", "email": "24053@anu.edu"}, {"id": "24054", "name": "Youliana Yasser Youssef", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 3.4, "courses": "6", "email": "24054@anu.edu"}, {"id": "24055", "name": "Lora Hakeem Shokry", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 2.6, "courses": "6", "email": "24055@anu.edu"}, {"id": "24056", "name": "Shokry Hakim Shokry", "gender": "Male", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 3.1, "courses": "6", "email": "24056@anu.edu"}, {"id": "24057", "name": "Rana Ibrahim Youssef", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 2.8, "courses": "6", "email": "24057@anu.edu"}, {"id": "24058", "name": "Hanin Hany Samy", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 1.19, "courses": "4", "email": "24058@anu.edu"}, {"id": "24059", "name": "Dana Ahmed Gamal", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 1.88, "courses": "4", "email": "24059@anu.edu"}, {"id": "24060", "name": "Mariam Ashraf Samir", "gender": "Female", "year": "2nd", "dep": "SIM", "dep_id": "4", "gpa": 1.5, "courses": "4", "email": "24060@anu.edu"}, {"id": "23001", "name": "Eyad Ahmed Hassan", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 0.8, "courses": "4", "email": "23001@anu.edu"}, {"id": "23002", "name": "Joumna Ahmed Hassan", "gender": "Female", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 1.01, "courses": "4", "email": "23002@anu.edu"}, {"id": "23003", "name": "Omar Bakri Ahme", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 1.67, "courses": "4", "email": "23003@anu.edu"}, {"id": "23004", "name": "Nour Mohmed Hazem", "gender": "Female", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 2.0, "courses": "6", "email": "23004@anu.edu"}, {"id": "23005", "name": "Kenzy Mohmed Saad", "gender": "Female", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 3.8, "courses": "6", "email": "23005@anu.edu"}, {"id": "23006", "name": "Abdelrahman Walid Mostfa", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 2.6, "courses": "6", "email": "23006@anu.edu"}, {"id": "23007", "name": "Youssef Ahmed Fekry", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 2.7, "courses": "6", "email": "23007@anu.edu"}, {"id": "23008", "name": "Youssef Mohmed Shamy", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 2.9, "courses": "6", "email": "23008@anu.edu"}, {"id": "23009", "name": "Ahmed Amr Yahya", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 3.6, "courses": "6", "email": "23009@anu.edu"}, {"id": "23010", "name": "Zaiad Khaled Ahmed", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 2.7, "courses": "6", "email": "23010@anu.edu"}, {"id": "23011", "name": "Mohmed Elsayed Ibrahim", "gender": "Male", "year": "3rd", "dep": "IS", "dep_id": "3", "gpa": 2.4, "courses": "6", "email": "23011@anu.edu"}, {"id": "23012", "name": "Zeyad Aboelyazid Ibrahim", "gender": "Male", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 3.3, "courses": "6", "email": "23012@anu.edu"}, {"id": "23013", "name": "Mariam Hamdi Elsaid", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 2.7, "courses": "6", "email": "23013@anu.edu"}, {"id": "23014", "name": "Waad Ahmed Mostfa", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 2.8, "courses": "6", "email": "23014@anu.edu"}, {"id": "23015", "name": "Nour Waleed Hussien", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 3.6, "courses": "6", "email": "23015@anu.edu"}, {"id": "23016", "name": "Andrew Ayman Adel", "gender": "Male", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 1.7, "courses": "4", "email": "23016@anu.edu"}, {"id": "23017", "name": "Youssef Abdelrazek Mostfa", "gender": "Male", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 2.4, "courses": "6", "email": "23017@anu.edu"}, {"id": "23018", "name": "Perihan Khaled Husein", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 3.6, "courses": "6", "email": "23018@anu.edu"}, {"id": "23019", "name": "Mariam Ashraf Samir", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 1.2, "courses": "4", "email": "23019@anu.edu"}, {"id": "23020", "name": "Lodgy Ehab Maher", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 2.5, "courses": "6", "email": "23020@anu.edu"}, {"id": "23021", "name": "Abdelrahman Mashalaa", "gender": "Male", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 1.5, "courses": "4", "email": "23021@anu.edu"}, {"id": "23022", "name": "Mamdouh Ahmed Ali", "gender": "Male", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 2.9, "courses": "6", "email": "23022@anu.edu"}, {"id": "23023", "name": "Sara Ahmed Gamal", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 3.5, "courses": "6", "email": "23023@anu.edu"}, {"id": "23024", "name": "Hanya Hany Samy", "gender": "Female", "year": "3rd", "dep": "DS", "dep_id": "1", "gpa": 1.7, "courses": "4", "email": "23024@anu.edu"}, {"id": "23025", "name": "Mena Ahmed Youssry", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 1.3, "courses": "4", "email": "23025@anu.edu"}, {"id": "23026", "name": "Amir Samy Yousry", "gender": "Male", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.1, "courses": "6", "email": "23026@anu.edu"}, {"id": "23027", "name": "Ibrahim Ahmed Ali", "gender": "Male", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.9, "courses": "6", "email": "23027@anu.edu"}, {"id": "23028", "name": "Zeyad Nabil Sameh", "gender": "Male", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.8, "courses": "6", "email": "23028@anu.edu"}, {"id": "23029", "name": "Mohmed Tawfik Razik", "gender": "Male", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 1.1, "courses": "4", "email": "23029@anu.edu"}, {"id": "23030", "name": "Nover Hany Gamal", "gender": "Male", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 1.0, "courses": "4", "email": "23030@anu.edu"}, {"id": "23031", "name": "Rowan Mohmed Gaber", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 1.44, "courses": "4", "email": "23031@anu.edu"}, {"id": "23032", "name": "Maryam Ahmed Gaber", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.9, "courses": "6", "email": "23032@anu.edu"}, {"id": "23033", "name": "Jassmin Hossam El Din", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.84, "courses": "6", "email": "23033@anu.edu"}, {"id": "23034", "name": "Habiba Amr Abdelhady", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.7, "courses": "6", "email": "23034@anu.edu"}, {"id": "23035", "name": "Hams Samir Mahros", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.8, "courses": "6", "email": "23035@anu.edu"}, {"id": "23036", "name": "Mahinda Khaled Mohmed", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 1.5, "courses": "4", "email": "23036@anu.edu"}, {"id": "23037", "name": "Logain Walid Barkat", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 2.0, "courses": "6", "email": "23037@anu.edu"}, {"id": "23038", "name": "Heba Salah Mohmed", "gender": "Female", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 1.9, "courses": "4", "email": "23038@anu.edu"}, {"id": "23039", "name": "Emad Ahmed Youssry", "gender": "Male", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 1.3, "courses": "4", "email": "23039@anu.edu"}, {"id": "23040", "name": "Youssef Masbah Ahmed", "gender": "Male", "year": "3rd", "dep": "SIM", "dep_id": "4", "gpa": 3.5, "courses": "6", "email": "23040@anu.edu"}, {"id": "23041", "name": "Khaled Abdallah Mohmed", "gender": "Male", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 2.6, "courses": "6", "email": "23041@anu.edu"}, {"id": "23042", "name": "Nada Samir Masalhi", "gender": "Female", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 1.5, "courses": "4", "email": "23042@anu.edu"}, {"id": "23043", "name": "Ziena Hassan Abdelkadir", "gender": "Female", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 2.9, "courses": "6", "email": "23043@anu.edu"}, {"id": "23044", "name": "Omar Hassan El Saht", "gender": "Male", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 1.6, "courses": "4", "email": "23044@anu.edu"}, {"id": "23045", "name": "Yassin Ahmed Hamdy", "gender": "Male", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 1.3, "courses": "4", "email": "23045@anu.edu"}, {"id": "23046", "name": "Salim Hesham Radwan", "gender": "Male", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 2.0, "courses": "6", "email": "23046@anu.edu"}, {"id": "23047", "name": "Morad Ahmed Abdelsalam", "gender": "Male", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 1.88, "courses": "4", "email": "23047@anu.edu"}, {"id": "23048", "name": "Youssef Alaa Ahmed", "gender": "Male", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 2.6, "courses": "6", "email": "23048@anu.edu"}, {"id": "23049", "name": "Ranya Ahmed Farag", "gender": "Female", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 1.6, "courses": "4", "email": "23049@anu.edu"}, {"id": "23050", "name": "Reem Reafat Galab", "gender": "Female", "year": "3rd", "dep": "CS", "dep_id": "2", "gpa": 3.1, "courses": "6", "email": "23050@anu.edu"}, {"id": "22001", "name": "Alaa Mohmed Hassan", "gender": "Female", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.4, "courses": "6", "email": "22001@anu.edu"}, {"id": "22002", "name": "Sohila Tawfik Mohmed", "gender": "Female", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 1.5, "courses": "4", "email": "22002@anu.edu"}, {"id": "22003", "name": "Abdelrahman Mohmed Salah", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.7, "courses": "6", "email": "22003@anu.edu"}, {"id": "22004", "name": "Abdelrahman Farag", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.4, "courses": "6", "email": "22004@anu.edu"}, {"id": "22005", "name": "Amr Hesham Walid", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.3, "courses": "6", "email": "22005@anu.edu"}, {"id": "22006", "name": "Ahmed Walid Barkat", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 2.4, "courses": "4", "email": "22006@anu.edu"}, {"id": "22007", "name": "Yassin Amgad Ali", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 1.9, "courses": "4", "email": "22007@anu.edu"}, {"id": "22008", "name": "Ali Mohmed Ahmed", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.1, "courses": "6", "email": "22008@anu.edu"}, {"id": "22009", "name": "Ali Ahmed Ali", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.3, "courses": "6", "email": "22009@anu.edu"}, {"id": "22010", "name": "Hany Ahmed Gamal", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 2.6, "courses": "6", "email": "22010@anu.edu"}, {"id": "22011", "name": "Peter Makram Hany", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 2.9, "courses": "6", "email": "22011@anu.edu"}, {"id": "22012", "name": "Gorege Hakim Metwally", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.6, "courses": "6", "email": "22012@anu.edu"}, {"id": "22013", "name": "Bilal Weal Mohmed", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 2.7, "courses": "6", "email": "22013@anu.edu"}, {"id": "22014", "name": "Peter Maged Emil", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 2.5, "courses": "6", "email": "22014@anu.edu"}, {"id": "22015", "name": "Dina Alaa Mohmed", "gender": "Female", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.4, "courses": "6", "email": "22015@anu.edu"}, {"id": "22016", "name": "Tahir Mostfa Hussien", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 1.5, "courses": "4", "email": "22016@anu.edu"}, {"id": "22017", "name": "Ibrahim Tarek Ahmed", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 2.6, "courses": "6", "email": "22017@anu.edu"}, {"id": "22018", "name": "Tarek Walid Mohmed", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.8, "courses": "6", "email": "22018@anu.edu"}, {"id": "22019", "name": "Mohmed Badr Khaled", "gender": "Male", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.6, "courses": "6", "email": "22019@anu.edu"}, {"id": "22020", "name": "Basma Ayman Walid", "gender": "Female", "year": "4th", "dep": "IS", "dep_id": "3", "gpa": 3.4, "courses": "6", "email": "22020@anu.edu"}, {"id": "22021", "name": "Farah Ayman Khaled", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 1.67, "courses": "4", "email": "22021@anu.edu"}, {"id": "22022", "name": "Radwa Ahmed Hassan", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 1.2, "courses": "4", "email": "22022@anu.edu"}, {"id": "22023", "name": "Fatema Ahmed Hetwally", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 1.65, "courses": "4", "email": "22023@anu.edu"}, {"id": "22024", "name": "Mohmed Hany Rashad", "gender": "Male", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 2.7, "courses": "6", "email": "22024@anu.edu"}, {"id": "22025", "name": "Retag Mohamed Bakr", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 3.5, "courses": "6", "email": "22025@anu.edu"}, {"id": "22026", "name": "Aisha Khaled Mohmed", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 3.4, "courses": "6", "email": "22026@anu.edu"}, {"id": "22027", "name": "Retag Mohmed Saad", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 3.7, "courses": "6", "email": "22027@anu.edu"}, {"id": "22028", "name": "Malak Sherif Mohmed", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 3.41, "courses": "6", "email": "22028@anu.edu"}, {"id": "22029", "name": "Farah Ahmed Elsaid", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 1.88, "courses": "4", "email": "22029@anu.edu"}, {"id": "22030", "name": "Rowan Maged Osman", "gender": "Female", "year": "4th", "dep": "DS", "dep_id": "1", "gpa": 3.31, "courses": "6", "email": "22030@anu.edu"}, {"id": "22031", "name": "Nour Hassan El Saht", "gender": "Female", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 2.3, "courses": "6", "email": "22031@anu.edu"}, {"id": "22032", "name": "Youmna Hatem Noureldin", "gender": "Female", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 2.5, "courses": "6", "email": "22032@anu.edu"}, {"id": "22033", "name": "Yassmin Abdallah Mohmed", "gender": "Female", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 2.9, "courses": "6", "email": "22033@anu.edu"}, {"id": "22034", "name": "Karim Aymad Awad", "gender": "Male", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 2.9, "courses": "6", "email": "22034@anu.edu"}, {"id": "22035", "name": "Omar Ayman Awad", "gender": "Male", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 2.9, "courses": "6", "email": "22035@anu.edu"}, {"id": "22036", "name": "Sherin Ashraf Salam", "gender": "Female", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 3.2, "courses": "6", "email": "22036@anu.edu"}, {"id": "22037", "name": "Dalia  Rayad Mostfa", "gender": "Female", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 3.1, "courses": "6", "email": "22037@anu.edu"}, {"id": "22038", "name": "Bassam Bahaa Mansour", "gender": "Male", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 1.66, "courses": "4", "email": "22038@anu.edu"}, {"id": "22039", "name": "Mahmoud Mohmed Mansour", "gender": "Male", "year": "4th", "dep": "SIM", "dep_id": "4", "gpa": 1.76, "courses": "4", "email": "22039@anu.edu"}, {"id": "22040", "name": "Karim Walid Gamal", "gender": "Male", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 2.7, "courses": "6", "email": "22040@anu.edu"}, {"id": "22041", "name": "Haneen Hossam Ahmed", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 3.4, "courses": "6", "email": "22041@anu.edu"}, {"id": "22042", "name": "Rawda Eslam Mohmed", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 3.2, "courses": "6", "email": "22042@anu.edu"}, {"id": "22043", "name": "Nour Khald Elkady", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 2.1, "courses": "6", "email": "22043@anu.edu"}, {"id": "22044", "name": "Dalia Alaa Solima", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 2.9, "courses": "6", "email": "22044@anu.edu"}, {"id": "22045", "name": "Jana Hussien Moussa", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 3.1, "courses": "4", "email": "22045@anu.edu"}, {"id": "22046", "name": "Youssef Yasser Ahmed", "gender": "Male", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 3.8, "courses": "4", "email": "22046@anu.edu"}, {"id": "22047", "name": "Zeina Ahmed Lotfy", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 3.66, "courses": "6", "email": "22047@anu.edu"}, {"id": "22048", "name": "Mariam Mahmoud Omar", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 2.66, "courses": "6", "email": "22048@anu.edu"}, {"id": "22049", "name": "Omar Bassam Alaa", "gender": "Male", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 3.45, "courses": "6", "email": "22049@anu.edu"}, {"id": "22050", "name": "Laila Tamer Mohmed", "gender": "Female", "year": "4th", "dep": "CS", "dep_id": "2", "gpa": 1.6, "courses": "4", "email": "22050@anu.edu"}];
+const depColors={DS:'badge-blue',CS:'badge-purple',IS:'badge-green',SIM:'badge-amber'};
+const depMap={DS:'Data Science',CS:'Computer Science',IS:'Information Systems',SIM:'Smart Intelligent'};
+const PAGE_SIZE=20;
+let filtered=[];let curPage=1;
+
+function gpaColor(g){
+  if(g>=3.33)return'badge-green';
+  if(g>=2)return'badge-blue';
+  if(g>=1)return'badge-amber';
+  return'badge-red';
+}
+
+function renderStudents(){
+  const body=document.getElementById('studBody');
+  const start=(curPage-1)*PAGE_SIZE,end=Math.min(start+PAGE_SIZE,filtered.length);
+  body.innerHTML=filtered.slice(start,end).map(s=>{
+    const pct=Math.round((s.gpa/4)*100);
+    const dc=depColors[s.dep]||'badge-blue';
+    const gc=gpaColor(s.gpa);
+    return`<tr>
+      <td class="cell-primary">${s.id}</td>
+      <td class="cell-primary">${s.name}</td>
+      <td>${s.gender==='Female'?'♀ Female':'♂ Male'}</td>
+      <td>${s.year}</td>
+      <td><span class="badge ${dc}">${s.dep}</span></td>
+      <td><div class="gpa-bar-wrap"><div class="gpa-bar"><div class="gpa-fill" style="width:${pct}%"></div></div><span class="badge ${gc}" style="font-size:10px">${s.gpa.toFixed(2)}</span></div></td>
+      <td>${s.courses}</td>
+      <td style="font-size:12px;color:var(--text3)">${s.email}</td>
+    </tr>`;
+  }).join('');
+  const total=filtered.length;
+  document.getElementById('studCount').textContent=`Showing ${start+1}–${end} of ${total} students`;
+  document.getElementById('pageInfo').textContent=`Page ${curPage} of ${Math.ceil(total/PAGE_SIZE)}`;
+  renderPagination();
+}
+
+function renderPagination(){
+  const total=Math.ceil(filtered.length/PAGE_SIZE);
+  const container=document.getElementById('pageBtns');
+  let html='';
+  for(let i=1;i<=total;i++){
+    if(i===1||i===total||Math.abs(i-curPage)<=1){
+      html+=`<button class="page-btn ${i===curPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if(Math.abs(i-curPage)===2){
+      html+=`<span style="color:var(--text3);padding:0 4px">…</span>`;
+    }
+  }
+  container.innerHTML=html;
+  document.getElementById('prevBtn').disabled=curPage===1;
+  document.getElementById('nextBtn').disabled=curPage===total;
+}
+
+function goPage(p){curPage=p;renderStudents()}
+function changePage(d){goPage(curPage+d)}
+
+function applyFilters(){
+  const q=document.getElementById('studSearch').value.toLowerCase();
+  const dept=document.getElementById('deptFilter').value;
+  const year=document.getElementById('yearFilter').value;
+  const gender=document.getElementById('genderFilter').value;
+  filtered=STUDENTS.filter(s=>{
+    if(q&&!s.name.toLowerCase().includes(q)&&!s.id.includes(q)&&!s.email.includes(q))return false;
+    if(dept&&s.dep!==dept)return false;
+    if(year&&s.year!==year)return false;
+    if(gender&&s.gender!==gender)return false;
+    return true;
+  });
+  curPage=1;renderStudents();
+}
+
+function renderDepts(){
+  const depts=['DS','CS','IS','SIM'];
+  const body=document.getElementById('deptBody');
+  body.innerHTML=depts.map((d,i)=>{
+    const students=STUDENTS.filter(s=>s.dep===d);
+    const avg=(students.reduce((a,s)=>a+s.gpa,0)/students.length).toFixed(2);
+    const courseCount={DS:4,CS:4,IS:3,SIM:3};
+    const dc=depColors[d];
+    return`<tr>
+      <td class="cell-primary">${i+1}</td>
+      <td><span class="badge ${dc}">${d}</span> ${depMap[d]}</td>
+      <td><span class="badge badge-blue">${students.length}</span></td>
+      <td>${courseCount[d]}</td>
+      <td><span class="badge ${gpaColor(parseFloat(avg))}">${avg}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderTopStudents(){
+  const top=[...STUDENTS].sort((a,b)=>b.gpa-a.gpa).slice(0,10);
+  document.getElementById('topBody').innerHTML=top.map((s,i)=>{
+    const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    const dc=depColors[s.dep];
+    return`<tr>
+      <td class="cell-primary">${medal||'#'+(i+1)}</td>
+      <td>${s.id}</td>
+      <td class="cell-primary">${s.name}</td>
+      <td><span class="badge ${dc}">${s.dep}</span></td>
+      <td>${s.year}</td>
+      <td><span class="badge badge-green">${s.gpa.toFixed(2)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// Nav
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    item.classList.add('active');
+    const sec=item.dataset.section;
+    document.getElementById(sec).classList.add('active');
+    document.getElementById('breadcrumb').textContent={dashboard:'Dashboard',students:'Students',departments:'Departments',courses:'Courses',doctors:'Faculty',enrollments:'Enrollments',schedule:'Schedule'}[sec]||sec;
+  });
+});
+
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+function addStudent(){
+  const id=document.getElementById('newId').value;
+  const name=document.getElementById('newName').value;
+  const gender=document.getElementById('newGender').value;
+  const year=document.getElementById('newYear').value;
+  const dep=document.getElementById('newDept').value;
+  const gpa=parseFloat(document.getElementById('newGpa').value)||0;
+  const email=document.getElementById('newEmail').value;
+  if(!id||!name){showToast('Please fill required fields!');return}
+  STUDENTS.unshift({id,name,gender,year,dep,gpa,courses:'6',email});
+  closeModal('addStudent');
+  applyFilters();
+  showToast('Student added successfully!');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent='✓ '+msg;t.style.opacity='1';
+  setTimeout(()=>t.style.opacity='0',2800);
+}
+
+// Init
+filtered=[...STUDENTS];
+renderStudents();
+renderDepts();
+renderTopStudents();
+</script>
+</body>
+</html>
